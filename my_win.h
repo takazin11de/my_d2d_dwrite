@@ -7,22 +7,21 @@
 #include <stddef.h>
 #include <stdint.h>
 
-int LoadWinAPI();
-
-#define HANDLE_MACRO                                                                                                                                           \
-  struct {                                                                                                                                                     \
+#define HANDLE_MACRO(y)                                                                                                                                        \
+  typedef struct _tag_handle_##y {                                                                                                                             \
     int dummy;                                                                                                                                                 \
-  }
+  } *y;
 
-typedef HANDLE_MACRO *Win_HINSTANCE, *Win_HMODULE;
-typedef HANDLE_MACRO *Win_HWND;
-typedef HANDLE_MACRO *Win_HMENU;
-typedef HANDLE_MACRO *Win_HICON;
-typedef HANDLE_MACRO *Win_HCURSOR;
-typedef HANDLE_MACRO *Win_HBRUSH;
-typedef HANDLE_MACRO *Win_HDC;
-typedef HANDLE_MACRO *Win_HANDLE;
-typedef HANDLE_MACRO *Win_HMONITOR;
+HANDLE_MACRO(Win_HINSTANCE);
+HANDLE_MACRO(Win_HWND);
+HANDLE_MACRO(Win_HMENU);
+HANDLE_MACRO(Win_HICON);
+HANDLE_MACRO(Win_HCURSOR);
+HANDLE_MACRO(Win_HBRUSH);
+HANDLE_MACRO(Win_HDC);
+HANDLE_MACRO(Win_HANDLE);
+HANDLE_MACRO(Win_HMONITOR);
+typedef Win_HINSTANCE Win_HMODULE;
 typedef uint16_t Win_WCHAR;
 typedef int32_t Win_HRESULT;
 typedef int64_t Win_LPARAM, Win_LRESULT;
@@ -106,7 +105,8 @@ typedef struct {
   uint32_t dwHighDateTime;
 } Win_FILETIME;
 
-#define Win_LF_FACESIZE 32
+enum { Win_LF_FACESIZE = 32 };
+
 typedef struct {
   int32_t lfHeight;
   int32_t lfWidth;
@@ -134,6 +134,7 @@ EXTERN Win_HMODULE(STDCALL *Win_LoadLibraryW)(const Win_WCHAR *lpLibFileName);
 EXTERN int32_t(STDCALL *Win_FreeLibrary)(Win_HMODULE hLibModule);
 typedef int64_t(STDCALL *Win_FARPROC)();
 EXTERN Win_FARPROC(STDCALL *Win_GetProcAddress)(Win_HMODULE hModule, const char *lpProcName);
+EXTERN Win_WCHAR *(STDCALL *Win_GetCommandLineW)();
 
 EXTERN void(STDCALL *Win_PostQuitMessage)(int32_t nExitCode);
 EXTERN Win_LRESULT(STDCALL *Win_DefWindowProcW)(Win_HWND hWnd, uint32_t Msg, Win_WPARAM wParam, Win_LPARAM lParam);
@@ -308,18 +309,6 @@ static uint32_t com_release(void **self) {
   return 0;
 }
 
-static Win_HINSTANCE get_instance() {
-  return (Win_HINSTANCE)Win_GetModuleHandleW(NULL);
-}
-
-static uint32_t get_show_command() {
-  Win_STARTUPINFOW si = {0};
-  si.cb               = sizeof(si);
-  Win_GetStartupInfoW(&si);
-  if (si.dwFlags & Win_STARTF_USESHOWWINDOW) {
-    return si.wShowWindow;
-  }
-  return Win_SW_SHOWDEFAULT;
-}
+int InitWinAPI(Win_HINSTANCE *instance, Win_WCHAR **command_line, uint32_t *show_command);
 
 #endif

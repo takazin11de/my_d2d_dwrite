@@ -24,7 +24,7 @@ extern Win_FARPROC(__stdcall GetProcAddress)(Win_HMODULE hModule, const char *lp
     }                                                                                                                                                          \
   } while (0)
 
-int LoadWinAPI() {
+int InitWinAPI(Win_HINSTANCE *instance, Win_WCHAR **command_line, uint32_t *show_command) {
 
   CORY_FUNC_PTR(Win_LoadLibraryW, LoadLibraryW);
   CORY_FUNC_PTR(Win_FreeLibrary, FreeLibrary);
@@ -37,10 +37,26 @@ int LoadWinAPI() {
   LOAD_DLL(kernel32, "Kernel32.dll");
   CORY_FUNC_PTR2(kernel32, Win_GetModuleHandleW, GetModuleHandleW);
   CORY_FUNC_PTR2(kernel32, Win_GetStartupInfoW, GetStartupInfoW);
+  CORY_FUNC_PTR2(kernel32, Win_GetCommandLineW, GetCommandLineW);
+
+  if (instance) {
+    *instance = Win_GetModuleHandleW(NULL);
+  }
+  if (command_line) {
+    *command_line = Win_GetCommandLineW();
+  }
+  if (show_command) {
+    Win_STARTUPINFOW si = {0};
+    si.cb               = sizeof(si);
+    Win_GetStartupInfoW(&si);
+    if (si.dwFlags & Win_STARTF_USESHOWWINDOW) {
+      *show_command = si.wShowWindow;
+    }
+    *show_command = Win_SW_SHOWDEFAULT;
+  }
 
   LOAD_DLL(user32, "User32.dll");
   CORY_FUNC_PTR2(user32, Win_GetMessageW, GetMessageW);
-
   CORY_FUNC_PTR2(user32, Win_TranslateMessage, TranslateMessage);
   CORY_FUNC_PTR2(user32, Win_DispatchMessageW, DispatchMessageW);
   CORY_FUNC_PTR2(user32, Win_GetClientRect, GetClientRect);
@@ -66,4 +82,8 @@ int LoadWinAPI() {
   CORY_FUNC_PTR2(dwrite, DWriteCreateFactory, DWriteCreateFactory);
 
   return 1;
+}
+
+int __main() {
+  return 0;
 }

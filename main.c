@@ -154,10 +154,6 @@ static Win_HRESULT init_d2d_dwrite() {
   return hr;
 }
 
-int __main() {
-  return 0;
-}
-
 static Win_LRESULT __stdcall WndProc(Win_HWND hwnd, uint32_t msg, Win_WPARAM w_param, Win_LPARAM l_param) {
   switch (msg) {
   case Win_WM_PAINT:
@@ -189,18 +185,17 @@ static Win_LRESULT __stdcall WndProc(Win_HWND hwnd, uint32_t msg, Win_WPARAM w_p
 const Win_WCHAR class_name[] = L"Direct2DWindow";
 
 int main() {
-  if (!LoadWinAPI()) {
+  Win_HINSTANCE instance;
+  uint32_t show_command;
+  if (!InitWinAPI(&instance, NULL, &show_command)) {
     return 1;
   }
-  Win_HINSTANCE instance = get_instance();
-  uint32_t show_command  = get_show_command();
 
   if (init_d2d_dwrite()) {
     return 1;
   }
 
-  Win_WNDCLASSW wc;
-  zero_mem(&wc, sizeof(wc));
+  Win_WNDCLASSW wc = {0};
 
   wc.lpfnWndProc   = WndProc;
   wc.hInstance     = instance;
