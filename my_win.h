@@ -24,8 +24,8 @@ HANDLE_MACRO(Win_HMONITOR);
 typedef Win_HINSTANCE Win_HMODULE;
 typedef uint16_t Win_WCHAR;
 typedef int32_t Win_HRESULT;
-typedef int64_t Win_LPARAM, Win_LRESULT;
-typedef uint64_t Win_WPARAM;
+typedef intptr_t Win_LPARAM, Win_LRESULT;
+typedef uintptr_t Win_WPARAM;
 typedef uint16_t Win_ATOM;
 typedef uint32_t Win_COLORREF;
 
@@ -132,8 +132,10 @@ typedef struct {
 
 EXTERN Win_HMODULE(STDCALL *Win_LoadLibraryW)(const Win_WCHAR *lpLibFileName);
 EXTERN int32_t(STDCALL *Win_FreeLibrary)(Win_HMODULE hLibModule);
-typedef int64_t(STDCALL *Win_FARPROC)();
+typedef intptr_t(STDCALL *Win_FARPROC)();
 EXTERN Win_FARPROC(STDCALL *Win_GetProcAddress)(Win_HMODULE hModule, const char *lpProcName);
+EXTERN void(STDCALL *Win_ExitProcess)(uint32_t uExitCode);
+
 EXTERN Win_WCHAR *(STDCALL *Win_GetCommandLineW)();
 
 EXTERN void(STDCALL *Win_PostQuitMessage)(int32_t nExitCode);
@@ -160,6 +162,7 @@ EXTERN void(STDCALL *Win_PostQuitMessage)(int32_t nExitCode);
 
 EXTERN Win_HMODULE(STDCALL *Win_GetModuleHandleW)(Win_WCHAR *lpModuleName);
 EXTERN void(STDCALL *Win_GetStartupInfoW)(Win_STARTUPINFOW *lpStartupInfo);
+EXTERN int32_t(STDCALL *Win_InvalidateRect)(Win_HWND hwnd, const Win_RECT *rect, int32_t erase);
 
 // mouse cursor
 #define Win_IDC_ARROW       ((void *)32512)

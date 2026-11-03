@@ -1,4 +1,3 @@
-
 #ifndef MY_D2D1_H
 #define MY_D2D1_H
 

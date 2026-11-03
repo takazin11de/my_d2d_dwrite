@@ -38,5 +38,4 @@ static inline bool Uuid_eq(const Uuid *a, const Uuid *b) {
 #define DECLARE_INTERFACE(Interface, uuid_a, uuid_b, Inheritance) DECLARE_INTERFACE_BASE(Interface, uuid_a, uuid_b) INTERFACE_VTABLE(Inheritance) _base_;
 #define DECLARE_INTERFACE_END                                     }
 
-
 #endif

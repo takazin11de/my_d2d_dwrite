@@ -4,21 +4,22 @@
 #include "my_d2d1.h"
 #include "my_dwrite.h"
 
-extern Win_HMODULE(__stdcall LoadLibraryW)(const Win_WCHAR *lpLibFileName);
-extern int32_t(__stdcall FreeLibrary)(Win_HMODULE hLibModule);
-extern Win_FARPROC(__stdcall GetProcAddress)(Win_HMODULE hModule, const char *lpProcName);
+__declspec(dllimport) Win_HMODULE __stdcall LoadLibraryW(const Win_WCHAR *lpLibFileName);
+__declspec(dllimport) int32_t __stdcall FreeLibrary(Win_HMODULE hLibModule);
+__declspec(dllimport) Win_FARPROC __stdcall GetProcAddress(Win_HMODULE hModule, const char *lpProcName);
+__declspec(dllimport) void __stdcall ExitProcess(uint32_t uExitCode);
 
 #define CORY_FUNC_PTR(a, b) ((a) = (void *)(b))
 
 #define LOAD_DLL(a, b)                                                                                                                                         \
-  Win_HMODULE a = LoadLibraryW(L##b);                                                                                                                          \
+  Win_HMODULE a = Win_LoadLibraryW(L##b);                                                                                                                      \
   if ((a) == NULL) {                                                                                                                                           \
     return 0;                                                                                                                                                  \
   }
 
 #define CORY_FUNC_PTR2(a, b, c)                                                                                                                                \
   do {                                                                                                                                                         \
-    b = (void *)GetProcAddress((a), #c);                                                                                                                       \
+    b = (void *)Win_GetProcAddress((a), #c);                                                                                                                   \
     if (b == NULL) {                                                                                                                                           \
       return 0;                                                                                                                                                \
     }                                                                                                                                                          \
@@ -29,10 +30,7 @@ int InitWinAPI(Win_HINSTANCE *instance, Win_WCHAR **command_line, uint32_t *show
   CORY_FUNC_PTR(Win_LoadLibraryW, LoadLibraryW);
   CORY_FUNC_PTR(Win_FreeLibrary, FreeLibrary);
   CORY_FUNC_PTR(Win_GetProcAddress, GetProcAddress);
-
-  if (Win_LoadLibraryW == NULL || Win_FreeLibrary == NULL || Win_GetProcAddress == NULL) {
-    return 0;
-  }
+  CORY_FUNC_PTR(Win_ExitProcess, ExitProcess);
 
   LOAD_DLL(kernel32, "Kernel32.dll");
   CORY_FUNC_PTR2(kernel32, Win_GetModuleHandleW, GetModuleHandleW);
@@ -51,8 +49,9 @@ int InitWinAPI(Win_HINSTANCE *instance, Win_WCHAR **command_line, uint32_t *show
     Win_GetStartupInfoW(&si);
     if (si.dwFlags & Win_STARTF_USESHOWWINDOW) {
       *show_command = si.wShowWindow;
+    } else {
+      *show_command = Win_SW_SHOWDEFAULT;
     }
-    *show_command = Win_SW_SHOWDEFAULT;
   }
 
   LOAD_DLL(user32, "User32.dll");
@@ -70,6 +69,7 @@ int InitWinAPI(Win_HINSTANCE *instance, Win_WCHAR **command_line, uint32_t *show
   CORY_FUNC_PTR2(user32, Win_EndPaint, EndPaint);
   CORY_FUNC_PTR2(user32, Win_GetClientRect, GetClientRect);
   CORY_FUNC_PTR2(user32, Win_PostQuitMessage, PostQuitMessage);
+  CORY_FUNC_PTR2(user32, Win_InvalidateRect, InvalidateRect);
 
   LOAD_DLL(ole32, "Ole32.dll");
   CORY_FUNC_PTR2(ole32, Win_CoInitializeEx, CoInitializeEx);
