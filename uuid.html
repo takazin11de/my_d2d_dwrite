@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+Mono:wght@400;700&display=swap">
+  <title>UUID Generator</title>
+</head>
+<style>
+  *:where(:not(html, iframe, canvas, img, svg, video, audio):not(svg *, symbol *)) {
+    all: unset;
+    display: revert
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box
+  }
+
+  html {
+    -moz-text-size-adjust: none;
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none
+  }
+
+  a,
+  button {
+    cursor: revert
+  }
+
+  ol,
+  ul,
+  menu,
+  summary {
+    list-style: none
+  }
+
+  ol {
+    counter-reset: revert
+  }
+
+  img {
+    max-inline-size: 100%;
+    max-block-size: 100%
+  }
+
+  table {
+    border-collapse: collapse
+  }
+
+  input,
+  textarea {
+    -webkit-user-select: auto
+  }
+
+  textarea {
+    white-space: revert
+  }
+
+  meter {
+    -webkit-appearance: revert;
+    appearance: revert
+  }
+
+  :where(pre) {
+    all: revert;
+    box-sizing: border-box
+  }
+
+  ::placeholder {
+    color: unset
+  }
+
+  :where([hidden]) {
+    display: none
+  }
+
+  :where([contenteditable]:not([contenteditable="false"])) {
+    -moz-user-modify: read-write;
+    -webkit-user-modify: read-write;
+    overflow-wrap: break-word;
+    -webkit-line-break: after-white-space;
+    -webkit-user-select: auto
+  }
+
+  :where([draggable="true"]) {
+    -webkit-user-drag: element
+  }
+
+  :where(dialog:modal) {
+    all: revert;
+    box-sizing: border-box
+  }
+
+  ::-webkit-details-marker {
+    display: none
+  }
+
+  html {
+    font-family: "Noto Sans Mono", "Noto Sans JP", monospace;
+    font-size: 20px;
+  }
+
+  body {
+    padding: 0.5rem;
+  }
+
+  input {
+    border: 2px solid #888;
+    vertical-align: bottom;
+    height: 2.5rem;
+    padding: 0.5rem;
+    margin: 0.5rem;
+  }
+
+  button {
+    border: 2px solid #888;
+    user-select: none;
+    vertical-align: bottom;
+    height: 2.5rem;
+    padding: 0.5rem;
+    margin: 0.5rem;
+  }
+
+  textarea {
+    border: 2px solid #888;
+    display: inline-block;
+    vertical-align: bottom;
+    padding: 0.5rem;
+    min-height: 2.5rem;
+    ;
+    height: 500px;
+    width: 1500px;
+    margin: 0.5rem;
+  }
+</style>
+<body>
+  <h1>UUID Generator</h1>
+  <input id="uuid" type="text" size="40" readonly>
+  <button id="generate">生成</button>
+  <button id="copy">コピー</button>
+  <script>
+    const uuidInput = document.getElementById("uuid");
+    const generateButton = document.getElementById("generate");
+    const copyButton = document.getElementById("copy");
+    function generateUUID() {
+      uuidInput.value = crypto.randomUUID();
+    }
+    generateButton.addEventListener("click", generateUUID);
+    copyButton.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(uuidInput.value);
+    });
+
+    generateUUID();
+  </script>
+  <p>入力 インターフェース</p>
+  <div><textarea id="input_text"></textarea></div>
+  <button id="cnv">変換</button>
+  <button id="cnv_copy">コピー</button>
+  <p>出力</p>
+  <div><textarea id="output_text" readonly></textarea></div>
+  <script>
+    const InputText = document.getElementById("input_text");
+    const OutputText = document.getElementById("output_text");
+    const CnvButton = document.getElementById("cnv");
+    const CnvCopyButton = document.getElementById("cnv_copy");
+    function Cnv() {
+      var text = InputText.value;
+
+      var text2 = cnv_interface(text);
+      if (text2 != null) {
+        OutputText.value = text2;
+        return;
+      }
+
+      text2 = cnv_struct(text);
+      if (text2 != null) {
+        OutputText.value = text2;
+        return;
+      }
+
+      text2 = cnv_enum(text);
+
+
+      OutputText.value = text2;
+
+    }
+    CnvButton.addEventListener("click", Cnv);
+    CnvCopyButton.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(OutputText.value);
+    });
+
+
+
+
+    function cnv_interface(_text) {
+      const text_pre = "";
+      var text = _text + "";
+
+
+      var result = text.match(/"([0-9a-fA-F]{8})-([0-9a-fA-F]{4})-([0-9a-fA-F]{4})-([0-9a-fA-F]{4})-([0-9a-fA-F]{12})"\s*\)\s*([0-9a-zA-Z]*)\s*:\s*public\s*([0-9a-zA-Z]*)/sm);
+      if (result == null) { return null; }
+      var base = result[7];
+      if (base == "IUnknown") {
+        base = "Win_IUnknown";
+      }
+
+      var text1 = `DECLARE_INTERFACE(${text_pre}${result[6]}, 0x${result[1]}${result[2]}${result[3]}, 0x${result[4]}${result[5]}, ${text_pre}${base});
+struct {`;
+
+      text = mark_add_space(text);
+
+
+
+      var text2 = text.match(/\{(.*)\}/s)[1];
+
+
+      text2 = text2.replace(/public\s*:/sg, '');
+      text2 = text2.replace(/virtual/sg, '');
+      text2 = text2.replace(/STDMETHODCALLTYPE/sg, 'COMCALL');
+
+
+      text2 = text2.replace(/STDMETHOD\s*\(\s*([_a-zA-Z][_0-9a-zA-Z]*)\s*\)/sg, 'HRESULT COMCALL $1');
+      text2 = text2.replace(/STDMETHOD_\s*\(\s*([_a-zA-Z][_0-9a-zA-Z]*)\s*,\s*([_a-zA-Z][_0-9a-zA-Z]*)\s*\)/sg, '$1 COMCALL $2');
+
+
+      text2 = text2.replace(/\(([^;]*)\)([^;()]*);/sg, ' :{: $1 :}: $2 ;');
+
+      var new_text2;
+
+      while (1) {
+        new_text2 = text2.replace(/\(([^()]*)\)/sg, '');
+        if (new_text2 === text2) {
+          break;
+        }
+        text2 = new_text2;
+      }
+
+      text2 = text2.replace(/:{:/sg, '(');
+      text2 = text2.replace(/:}:/sg, ')');
+
+      text2 = text2.replace(/\).*?;/smg, ');');
+
+      text2 = text2.replace(/\s_[_0-9a-zA-Z]*_\s*\(.*?\)/sg, ' ');
+      text2 = text2.replace(/\s_[_0-9a-zA-Z]*_\s/sg, ' ');
+
+      text2 = text2.replace(/COM_DECLSPEC_NOTHROW.*?}/smg, '');
+      text2 = text2.replace(/\(\s*void\s*\)/smg, `()`);
+      text2 = text2.replace(/\(/smg, `(${text_pre}${result[6]} *self ,`);
+      text2 = text2.replace(/,\s*\)/sg, ')');
+      text2 = text2.replace(/COMCALL\s+([_a-zA-Z][_0-9a-zA-Z]*)\s+\(/g, `(COMCALL * $1)(`);
+      text2 = text2.replace(/COM_DECLSPEC_NOTHROW.*?;/smg, '');
+      text2 = text2.replace(/=\s*[_0-9a-zA-Z.]*/smg, '');
+
+
+
+      text2 = cnv_type(text2);
+
+      var text3 = `${text1}
+${text2}
+};
+DECLARE_INTERFACE_END;`
+
+      text3 = cnv_space_line(text3);
+      text3 = cnv_indent(text3);
+      return text3;
+    }
+
+    function cnv_struct(_text) {
+      var text = mark_add_space(_text + "");
+      text = cnv_type(text);
+      var result = text.match(/\sstruct\s[^{]*{(.*)}\s*([_a-zA-Z][_0-9a-zA-Z]*)/sm);
+      if (result == null) { return null; }
+      var type_name = result[2].replace(/D2D_/smg, `D2D1_`);
+      var element = result[1];
+      text = `typedef struct {
+      ${element}
+      } ${type_name};`
+      text = cnv_space_line(text);
+      text = cnv_indent(text);
+      text = text.replace(/}\s*([^{};]*)/sg, `} $1`);
+      text = text.replace(/\s*DUMMYUNIONNAME[0-9]*\s*/sg, ``);
+      text = text.replace(/\s*DUMMYSTRUCTNAME[0-9]*\s*/sg, ``);
+
+      return text;
+    }
+
+    function cnv_enum(_text) {
+      var text = mark_add_space(_text + "");
+      text = cnv_type(text);
+      var result = text.match(/\senum\s[^{]*{(.*)}\s*([_a-zA-Z][_0-9a-zA-Z]*)/sm);
+      if (result == null) { return null; }
+      var type_name = result[2].replace(/D2D_/smg, `D2D1_`);
+      var element = result[1];
+      element = (element + ",").replace(/,\s*,/s, ",");
+      text = `typedef uint32_t ${type_name};
+      enum {
+      ${element}
+      };`
+      text = cnv_space_line(text);
+      text = text.replace(/,\s*/smg, `,\n`);
+      text = text.replace(/=/smg, ` = `);
+
+      return cnv_indent(text);
+    }
+    function mark_add_space(text) {
+      text = " " + text + " ";
+      text = text.replace(/\/\*.*?\*\//smg, '');
+      text = text.replace(/,/smg, ` , `);
+      text = text.replace(/\*/smg, ` * `);
+      text = text.replace(/:/smg, ` : `);
+      text = text.replace(/;/smg, ` ; `);
+      text = text.replace(/{/smg, ` { `);
+      text = text.replace(/}/smg, ` } `);
+      text = text.replace(/\(/smg, ` ( `);
+      text = text.replace(/\)/smg, ` ) `);
+      text = text.replace(/=/smg, ` = `);
+      text = text.replace(/\/\/.*?\n/smg, '');
+      return text;
+    }
+
+    function cnv_type(text) {
+      text = text.replace(/\s+CONST\s+/smg, ` const `);
+      text = text.replace(/\s+FLOAT\s+/smg, ` float `);
+      text = text.replace(/\s+UINT32\s+/smg, ` uint32_t `);
+      text = text.replace(/\s+DWORD\s+/smg, ` uint32_t `);
+      text = text.replace(/\s+ULONG\s+/smg, ` uint32_t `);
+      text = text.replace(/\s+UINT\s+/smg, ` uint32_t `);
+
+      text = text.replace(/\s+INT64\s+/smg, ` int64_t `);
+      text = text.replace(/\s+UINT64\s+/smg, ` uint64_t `);
+      text = text.replace(/\s+INT32\s+/smg, ` int32_t `);
+      text = text.replace(/\s+INT16\s+/smg, ` int16_t `);
+      text = text.replace(/\s+UINT16\s+/smg, ` uint16_t `);
+      text = text.replace(/\s+INT8\s+/smg, ` int8_t `);
+      text = text.replace(/\s+UINT8\s+/smg, ` uint8_t `);
+      text = text.replace(/\s+WCHAR\s+/smg, ` Win_WCHAR `);
+      text = text.replace(/\s+BYTE\s+/smg, ` uint8_t `);
+      text = text.replace(/\s+INT\s+/smg, ` int32_t `);
+      text = text.replace(/\s+LONG\s+/smg, ` int32_t `);
+      text = text.replace(/\s+BOOL\s+/smg, ` int32_t `);
+
+      text = text.replace(/\s+HRESULT\s+/smg, ` Win_HRESULT `);
+      text = text.replace(/\s+HWND\s+/smg, ` Win_HWND `);
+
+      text = text.replace(/\s+IUnknown\s+/smg, ` Win_IUnknown `);
+      text = text.replace(/\s+REFIID\s+/smg, ` Uuid * `);
+      text = text.replace(/\s+REFGUID\s+/smg, ` Uuid * `);
+      text = text.replace(/\s+IID\s+/smg, ` Uuid `);
+      return text;
+    }
+
+
+    function cnv_space_line(text) {
+      text = text.replace(/\s*,\s*/smg, `, `);
+      text = text.replace(/\s*;\s*/smg, `;`);
+      text = text.replace(/\s*{\s*/smg, `{`);
+      text = text.replace(/\s*}\s*/smg, `}`);
+      text = text.replace(/\s*\(\s*/smg, `(`);
+      text = text.replace(/\s*\)\s*/smg, `)`);
+      text = text.replace(/\s*=\s*/smg, `=`);
+
+      text = text.replace(/^\s*/sg, ``);
+      text = text.replace(/\s*$/sg, ``);
+      text = text.replace(/\s+/sg, ` `);
+      text = text.replace(/;/sg, `;\n`);
+      text = text.replace(/\{/sg, `{\n`);
+      return text;
+    }
+
+    function cnv_indent(text) {
+      var result = text.match(/^([^{]*){(.*)}([^}]*)$/s);
+      if (result == null) {
+        return text;
+      }
+      var text1 = result[1].match(/^\s*(.*?)\s*$/s)[1];
+      var text2 = result[2].match(/^\s*(.*?)\s*$/s)[1];
+      var result1 = result[3].match(/^\s*(;?)\s*(.*?)\s*$/s);
+      var text3 = result1[1];
+      var text4 = result1[2];
+      text2 = cnv_indent(text2);
+      var indent_text = "  ";
+      text2 = text2.replace(/^/smg, indent_text);
+      return `${text1} {
+${text2}
+}${text3}
+${text4}`;
+    }
+
+    function reverse_str(text) {
+      return text.split("").reverse().join("");
+    }
+
+  </script>
+</body>
+</html>

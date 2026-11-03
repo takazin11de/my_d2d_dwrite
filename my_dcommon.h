@@ -1,0 +1,20 @@
+#ifndef MY_DCOMMON_H
+#define MY_DCOMMON_H
+
+#include "com.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+typedef uint32_t DWRITE_MEASURING_MODE;
+enum {
+  DWRITE_MEASURING_MODE_NATURAL,
+  DWRITE_MEASURING_MODE_GDI_CLASSIC,
+  DWRITE_MEASURING_MODE_GDI_NATURAL,
+};
+
+
+
+
+
+#endif
