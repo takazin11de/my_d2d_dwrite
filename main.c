@@ -4,34 +4,29 @@
 #include "my_win.h"
 #include <stdint.h>
 
-#include <stdio.h>
-
-ID2D1Factory *g_d2_factory;
+ID2D1Factory *g_d2d_factory;
 ID2D1HwndRenderTarget *g_target;
 ID2D1SolidColorBrush *g_brush;
 ID2D1StrokeStyle *g_stroke_style;
-
 IDWriteFactory *g_dw_factory;
 IDWriteTextFormat *g_text_format;
-
-static void zero_mem(void *mem, size_t count) {
-  char *buf = mem;
-  for (int i = 0; i < count; i++) {
-    buf[i] = 0;
-  }
-}
 
 static void ReleaseRenderTarget(void) {
   com_release((void **)&g_brush);
   com_release((void **)&g_target);
+  com_release((void **)&g_stroke_style);
+  com_release((void **)&g_text_format);
+
+  com_release((void **)&g_dw_factory);
+  com_release((void **)&g_d2d_factory);
 }
 
 static Win_HRESULT CreateRenderTarget(Win_HWND hwnd) {
   Win_HRESULT hr;
   Win_RECT rc;
 
-  D2D1_RENDER_TARGET_PROPERTIES rt_props;
-  D2D1_HWND_RENDER_TARGET_PROPERTIES hwnd_props;
+  D2D1_RENDER_TARGET_PROPERTIES rt_props        = {0};
+  D2D1_HWND_RENDER_TARGET_PROPERTIES hwnd_props = {0};
   D2D1_COLOR_F color;
 
   ID2D1RenderTarget *rt;
@@ -42,7 +37,6 @@ static Win_HRESULT CreateRenderTarget(Win_HWND hwnd) {
 
   Win_GetClientRect(hwnd, &rc);
 
-  zero_mem(&rt_props, sizeof(rt_props));
   rt_props.type                  = D2D1_RENDER_TARGET_TYPE_DEFAULT;
   rt_props.pixelFormat.format    = DXGI_FORMAT_UNKNOWN;
   rt_props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_UNKNOWN;
@@ -51,13 +45,12 @@ static Win_HRESULT CreateRenderTarget(Win_HWND hwnd) {
   rt_props.usage                 = D2D1_RENDER_TARGET_USAGE_NONE;
   rt_props.minLevel              = D2D1_FEATURE_LEVEL_DEFAULT;
 
-  zero_mem(&hwnd_props, sizeof(hwnd_props));
   hwnd_props.hwnd             = hwnd;
   hwnd_props.pixelSize.width  = (uint32_t)(rc.right - rc.left);
   hwnd_props.pixelSize.height = (uint32_t)(rc.bottom - rc.top);
   hwnd_props.presentOptions   = D2D1_PRESENT_OPTIONS_NONE;
 
-  hr = g_d2_factory->vtable->CreateHwndRenderTarget(g_d2_factory, &rt_props, &hwnd_props, &g_target);
+  hr = g_d2d_factory->vtable->CreateHwndRenderTarget(g_d2d_factory, &rt_props, &hwnd_props, &g_target);
 
   if (Win_FAILED(hr)) {
     return hr;
@@ -71,7 +64,7 @@ static Win_HRESULT CreateRenderTarget(Win_HWND hwnd) {
   stroke_style_properties.dashStyle  = D2D1_DASH_STYLE_SOLID;
   stroke_style_properties.dashOffset = 0.0f;
 
-  hr = g_d2_factory->vtable->CreateStrokeStyle(g_d2_factory, &stroke_style_properties, NULL, 0, &g_stroke_style);
+  hr = g_d2d_factory->vtable->CreateStrokeStyle(g_d2d_factory, &stroke_style_properties, NULL, 0, &g_stroke_style);
   if (Win_FAILED(hr)) {
     return hr;
   }
@@ -136,7 +129,7 @@ static void Render(Win_HWND hwnd) {
 
 static Win_HRESULT init_d2d_dwrite() {
   Win_HRESULT hr;
-  hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &INTERFACE_UUID(ID2D1Factory), NULL, (void **)&g_d2_factory);
+  hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &INTERFACE_UUID(ID2D1Factory), NULL, (void **)&g_d2d_factory);
   if (Win_FAILED(hr)) {
     return hr;
   }
@@ -173,7 +166,6 @@ static Win_LRESULT __stdcall WndProc(Win_HWND hwnd, uint32_t msg, Win_WPARAM w_p
     return 0;
   case Win_WM_DESTROY:
     ReleaseRenderTarget();
-    com_release((void **)&g_d2_factory);
     Win_PostQuitMessage(0);
     return 0;
   default:
@@ -182,7 +174,7 @@ static Win_LRESULT __stdcall WndProc(Win_HWND hwnd, uint32_t msg, Win_WPARAM w_p
   return Win_DefWindowProcW(hwnd, msg, w_param, l_param);
 }
 
-const Win_WCHAR class_name[] = L"Direct2DWindow";
+const Win_WCHAR class_name[] = L"MyApp";
 
 int main() {
   Win_HINSTANCE instance;
